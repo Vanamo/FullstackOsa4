@@ -1,9 +1,7 @@
-const http = require('http')
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const Blog = require('./models/blog')
 const blogsRouter = require('./controllers/blogs')
 const mongoose = require('mongoose')
 
