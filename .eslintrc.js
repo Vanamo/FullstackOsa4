@@ -32,8 +32,9 @@ module.exports = {
         "no-console": 0
     },
     "globals": {
-        "tests": true,
+        "test": true,
         "expect": true,
         "describe": true
-    }
+    },
+    "parser": "babel-eslint"
 };

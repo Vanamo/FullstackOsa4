@@ -37,7 +37,7 @@ describe('favorite blog', () => {
     expect(result).toEqual(listWithOneBlog[0])
   })
 
-  test.only('when list has many blogs return favorite', () => {
+  test('when list has many blogs return favorite', () => {
     const result = listHelper.favoriteBlog(blogs)
     expect(result).toEqual(blogs[2])
   })

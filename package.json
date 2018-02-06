@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "watch": "nodemon index.js",
-    "test": "node_modules/.bin/jest --verbose",
+    "start": "cross-env NODE_ENV=production node index.js",
+    "watch": "cross-env NODE_ENV=development node_modules/.bin/nodemon index.js",
+    "test": "cross-env NODE_ENV=test node_modules/.bin/jest --verbose",
     "lint": "node_modules/.bin/eslint ."
   },
   "repository": {
@@ -22,6 +22,8 @@
     "mongoose": "^5.0.3"
   },
   "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "cross-env": "^5.1.3",
     "eslint": "^4.17.0",
     "eslint-config-standard": "^11.0.0-beta.0",
     "eslint-plugin-import": "^2.8.0",
@@ -29,6 +31,7 @@
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
     "jest": "^22.1.4",
-    "nodemon": "^1.14.12"
+    "nodemon": "^1.14.12",
+    "supertest": "^3.0.0"
   }
 }
