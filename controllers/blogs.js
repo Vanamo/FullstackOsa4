@@ -12,6 +12,14 @@ blogsRouter.get('/', (request, response) => {
 blogsRouter.post('/', (request, response) => {
   const blog = new Blog(request.body)
 
+  if (!blog.likes) {
+    blog.likes = 0
+  }
+
+  if (!blog.title || !blog.url) {
+    return response.status(400).json({ error: 'content missing' })
+  }
+
   blog
     .save()
     .then(result => {

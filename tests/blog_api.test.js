@@ -41,7 +41,7 @@ const initialBlogs = [
     title: 'TDD harms architecture',
     author: 'Robert C. Martin',
     url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
-    likes: 0,
+    likes: 1,
     __v: 0
   },
   {
@@ -96,7 +96,7 @@ describe('when there are initially some blogs saved', async () => {
         title: 'Testi',
         author: 'Testihenkilö',
         url: 'http://blogi.test',
-        likes: 0
+        likes: 2
       }
 
       await api
@@ -112,6 +112,65 @@ describe('when there are initially some blogs saved', async () => {
 
       const titles = blogsAfterOperation.body.map(r => r.title)
       expect(titles).toContain('Testi')
+    })
+
+    test('POST /api/blogs with undefined likes will be set to zero', async () => {
+
+      const blogsAtStart = await api
+        .get('/api/blogs')
+
+      const likesAtStart = blogsAtStart.body.map(blog => blog.likes)
+
+      expect(likesAtStart).not.toContain(0)
+
+      const newBlog = {
+        title: 'No Likes Test',
+        author: 'Testihenkilö',
+        url: 'http://blogi.test',
+        likes: undefined
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(201)
+        .expect('Content-Type', /application\/json/)
+
+      const blogsAfterOperation = await api
+        .get('/api/blogs')
+
+      const likes = blogsAfterOperation.body.map(r => r.likes)
+      expect(likes).toContain(0)
+    })
+
+    test('POST /api/blogs with undefined title responds with statuscode 400', async () => {
+
+      const newBlog = {
+        title: undefined,
+        author: 'Testihenkilö',
+        url: 'http://blogi.test',
+        likes: 1
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
+    })
+
+    test('POST /api/blogs with undefined url responds with statuscode 400', async () => {
+
+      const newBlog = {
+        title: 'Testi',
+        author: 'Testihenkilö',
+        url: undefined,
+        likes: 1
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(newBlog)
+        .expect(400)
     })
   })
 
