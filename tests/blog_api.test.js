@@ -2,57 +2,8 @@ const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const { initialBlogs, blogsInDB } = require('./test_helper')
 
-const initialBlogs = [
-  {
-    _id: '5a422a851b54a676234d17f7',
-    title: 'React patterns',
-    author: 'Michael Chan',
-    url: 'https://reactpatterns.com/',
-    likes: 7,
-    __v: 0
-  },
-  {
-    _id: '5a422aa71b54a676234d17f8',
-    title: 'Go To Statement Considered Harmful',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
-    likes: 5,
-    __v: 0
-  },
-  {
-    _id: '5a422b3a1b54a676234d17f9',
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-    likes: 12,
-    __v: 0
-  },
-  {
-    _id: '5a422b891b54a676234d17fa',
-    title: 'First class tests',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll',
-    likes: 10,
-    __v: 0
-  },
-  {
-    _id: '5a422ba71b54a676234d17fb',
-    title: 'TDD harms architecture',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
-    likes: 1,
-    __v: 0
-  },
-  {
-    _id: '5a422bc61b54a676234d17fc',
-    title: 'Type wars',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
-    likes: 2,
-    __v: 0
-  }
-]
 
 describe('when there are initially some blogs saved', async () => {
   beforeAll(async () => {
@@ -64,33 +15,38 @@ describe('when there are initially some blogs saved', async () => {
   })
 
   test('all blogs are returned as json by GET /api/blogs', async () => {
-    await api
+    const blogsInDatabase = await blogsInDB()
+
+    const response = await api
       .get('/api/blogs')
       .expect(200)
       .expect('Content-Type', /application\/json/)
-  })
 
-  test('all blogs are returned', async () => {
-    const response = await api
-      .get('/api/blogs')
+    expect(response.body.length).toBe(blogsInDatabase.length)
 
-    expect(response.body.length).toBe(initialBlogs.length)
+    const returnedTitles = response.body.map(b => b.title)
+    blogsInDatabase.forEach(b => {
+      expect(returnedTitles).toContain(b.title)
+    })
   })
 
   test('a specific blog is within the returned blogs', async () => {
+    const blogsInDatabase = await blogsInDB()
+    const aBlog = blogsInDatabase[0]
+
+    console.log('ablog id', aBlog.id)
     const response = await api
-      .get('/api/blogs')
+      .get(`/api/blogs/${aBlog.id}`)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
 
-    const authors = response.body.map(r => r.author)
-
-    expect(authors).toContain('Michael Chan')
+    expect(response.body.title).toBe(aBlog.title)
   })
 
   describe('addition of a new blog', async () => {
 
     test('POST /api/blogs succeeds with valid data', async () => {
-      const blogsAtStart = await api
-        .get('/api/blogs')
+      const blogsAtStart = await blogsInDB()
 
       const newBlog = {
         title: 'Testi',
@@ -105,21 +61,19 @@ describe('when there are initially some blogs saved', async () => {
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
-      const blogsAfterOperation = await api
-        .get('/api/blogs')
+      const blogsAfterOperation = await blogsInDB()
 
-      expect(blogsAfterOperation.body.length).toBe(blogsAtStart.body.length + 1)
+      expect(blogsAfterOperation.length).toBe(blogsAtStart.length + 1)
 
-      const titles = blogsAfterOperation.body.map(r => r.title)
+      const titles = blogsAfterOperation.map(r => r.title)
       expect(titles).toContain('Testi')
     })
 
     test('POST /api/blogs with undefined likes will be set to zero', async () => {
 
-      const blogsAtStart = await api
-        .get('/api/blogs')
+      const blogsAtStart = await blogsInDB()
 
-      const likesAtStart = blogsAtStart.body.map(blog => blog.likes)
+      const likesAtStart = blogsAtStart.map(blog => blog.likes)
 
       expect(likesAtStart).not.toContain(0)
 
@@ -136,10 +90,9 @@ describe('when there are initially some blogs saved', async () => {
         .expect(201)
         .expect('Content-Type', /application\/json/)
 
-      const blogsAfterOperation = await api
-        .get('/api/blogs')
+      const blogsAfterOperation = await blogsInDB()
 
-      const likes = blogsAfterOperation.body.map(r => r.likes)
+      const likes = blogsAfterOperation.map(r => r.likes)
       expect(likes).toContain(0)
     })
 
@@ -171,6 +124,34 @@ describe('when there are initially some blogs saved', async () => {
         .post('/api/blogs')
         .send(newBlog)
         .expect(400)
+    })
+    describe('deletion of a blog', async () => {
+      let addedBlog
+
+      beforeAll(async () => {
+        addedBlog = new Blog({
+          title: 'Poistotesti',
+          author: 'Testihenkilö',
+          url: 'http://blog.test',
+          likes: 1
+        })
+        await addedBlog.save()
+      })
+
+      test('DELETE /api/blogs/:id succeeds with proper statuscode', async () => {
+        const blogsAtStart = await blogsInDB()
+
+        await api
+          .delete(`/api/blogs/${addedBlog._id}`)
+          .expect(204)
+
+        const blogsAfterOperation = await blogsInDB()
+
+        const titles = blogsAfterOperation.map(b => b.title)
+
+        expect(titles).not.toContain(addedBlog.title)
+        expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
+      })
     })
   })
 

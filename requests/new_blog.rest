@@ -4,6 +4,6 @@ content-type: application/json
 {
   "title": "Testi",
   "author": "Testihenkilö",
-  "url": null,
+  "url": "http://blog.test",
   "likes": null
 }
