@@ -2,7 +2,9 @@ const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const { initialBlogs, blogsInDB } = require('./test_helper')
+const User = require('../models/user')
+const { initialBlogs, blogsInDB, initialUsers, usersInDB } = require('./test_helper')
+
 
 
 describe('when there are initially some blogs saved', async () => {
@@ -151,6 +153,115 @@ describe('when there are initially some blogs saved', async () => {
 
         expect(titles).not.toContain(addedBlog.title)
         expect(blogsAfterOperation.length).toBe(blogsAtStart.length - 1)
+      })
+    })
+  })
+  describe('when there are initially some users saved', async () => {
+    beforeAll(async () => {
+      await User.remove({})
+
+      const blogObjects = initialUsers.map(user => new User(user))
+      const promiseArray = blogObjects.map(user => user.save())
+      await Promise.all(promiseArray)
+    })
+
+    test('all users are returned as json by GET /api/blogs', async () => {
+      const usersInDatabase = await usersInDB()
+
+      const response = await api
+        .get('/api/users')
+        .expect(200)
+        .expect('Content-Type', /application\/json/)
+
+      expect(response.body.length).toBe(usersInDatabase.length)
+
+      const returnedNames = response.body.map(u => u.name)
+      usersInDatabase.forEach(u => {
+        expect(returnedNames).toContain(u.name)
+      })
+    })
+
+    describe('addition of a new user', async () => {
+
+      test('POST /api/users succeeds with a fresh username', async () => {
+        const usersAtStart = await usersInDB()
+
+        const newUser = {
+          username: 'uusiHenkilö',
+          name: 'Aivan Uusi',
+          adult: true,
+          password: 'erittainsalainen'
+        }
+
+        await api
+          .post('/api/users')
+          .send(newUser)
+          .expect(201)
+          .expect('Content-Type', /application\/json/)
+
+        const usersAfterOperation = await usersInDB()
+
+        expect(usersAfterOperation.length).toBe(usersAtStart.length + 1)
+
+        const names = usersAfterOperation.map(u => u.name)
+        expect(names).toContain(newUser.name)
+      })
+
+      test('POST /api/users with username less than 3 chars returns 400', async () => {
+        const newUser = {
+          username: 'ei',
+          name: 'Liian Lyhyt',
+          adult: true,
+          password: 'hyvinsalainen'
+        }
+
+        await api
+          .post('/api/users')
+          .send(newUser)
+          .expect(400)
+      })
+
+      test('POST /api/users fails with proper statuscode and message if username asready exists', async () => {
+        const usersBeforeOperation = await usersInDB()
+
+        const newUser = {
+          username: 'testaaja',
+          name: 'Toinen Testaaja',
+          adult: true,
+          password: 'vaikea'
+        }
+
+        const result = await api
+          .post('/api/users')
+          .send(newUser)
+          .expect(400)
+          .expect('Content-Type', /application\/json/)
+
+        expect(result.body).toEqual({ error: 'username must be unique' })
+
+        const usersAfterOperation = await usersInDB()
+        expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
+      })
+
+      test('POST /api/users with undefined adult field will be set to true', async () => {
+
+        const newUser = {
+          username: 'aikuinen',
+          name: 'Aki Aikuinen',
+          adult: undefined,
+          password: 'salattu'
+        }
+
+        await api
+          .post('/api/users')
+          .send(newUser)
+          .expect(201)
+          .expect('Content-Type', /application\/json/)
+
+        const usersAfterOperation = await usersInDB()
+
+        const addedUser = usersAfterOperation.find(u => u.username === newUser.username)
+        expect(addedUser.adult).toBe(true)
       })
     })
   })
