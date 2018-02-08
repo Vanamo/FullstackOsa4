@@ -1,8 +1,9 @@
 POST http://localhost:3001/api/blogs
 content-type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RhYWphIiwiaWQiOiI1YTdiMjM1YjY2NTAyNzViNzliNDZkYjMiLCJpYXQiOjE1MTgwOTMwNjJ9.G3M4akOzvR3_DlQwOB-LV6ADaLqfioaJOiSXUlzPwgU
 
 {
-  "title": "Testi",
+  "title": "Testi2",
   "author": "Testihenkilö",
   "url": "http://blog.test",
   "likes": null,
