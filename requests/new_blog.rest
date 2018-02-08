@@ -1,11 +1,11 @@
 POST http://localhost:3001/api/blogs
 content-type: application/json
-Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RhYWphIiwiaWQiOiI1YTdiMjM1YjY2NTAyNzViNzliNDZkYjMiLCJpYXQiOjE1MTgwOTMwNjJ9.G3M4akOzvR3_DlQwOB-LV6ADaLqfioaJOiSXUlzPwgU
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RhYWphMiIsImlkIjoiNWE3YzRlNzc4Nzc5YzcyN2NhY2JlNTczIiwiaWF0IjoxNTE4MDk2MTIxfQ.Jli3J-5ldUSeeBsfEDDoVvfwUZeCuNMmYecMrcuyZRE
 
 {
   "title": "Testi2",
-  "author": "Testihenkilö",
+  "author": "Teppo Testaaja",
   "url": "http://blog.test",
   "likes": null,
-  "user": "5a7b235b6650275b79b46db3"
+  "user": "5a7c4e778779c727cacbe573"
 }
